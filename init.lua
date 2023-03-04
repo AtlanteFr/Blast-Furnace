@@ -11,30 +11,6 @@ minetest.register_craft({
 	}
 })
 
-local explosion_particles = {
-	amount = 60,
-	time = 2,
-	minpos = {x=-0.5, y=0, z=-0.5},
-	maxpos = {x=0.5, y=0.5, z=0.5},
-	minvel = {x=-1, y=2, z=-1},
-	maxvel = {x=1, y=4, z=1},
-	minacc = {x=-1, y=-1, z=-1},
-	maxacc = {x=1, y=1, z=1},
-	minexptime = 1,
-	maxexptime = 2,
-	minsize = 3,
-	maxsize = 4,
-	collisiondetection = true,
-	texture = "tnt_smoke.png",
-	animation = {
-		type = "vertical_frames",
-		aspect_w = 16,
-		aspect_h = 16,
-		length = 0.8,
-	},
-	glow = 11,
-}
-
 
 -- support for MT game translation.
 local S = default.get_translator
@@ -463,7 +439,7 @@ minetest.register_node("blast_furnace:blast_furnace_active", {
 		minetest.add_particlespawner({
 			amount = 10,
 			time = 0.1,
-			minpos = {x=pos.x-0.5, y=pos.y+0.7, z=pos.z-0.5},
+			minpos = {x=pos.x-0.5, y=pos.y+0.85, z=pos.z-0.5},
 			maxpos = {x=pos.x+0.5, y=pos.y+0.7, z=pos.z+0.5},
 			minvel = {x=-0.1, y=0.1, z=-0.1},
 			maxvel = {x=0.1, y=0.3, z=0.1},
