@@ -11,7 +11,29 @@ minetest.register_craft({
 	}
 })
 
-
+local explosion_particles = {
+	amount = 60,
+	time = 2,
+	minpos = {x=-0.5, y=0, z=-0.5},
+	maxpos = {x=0.5, y=0.5, z=0.5},
+	minvel = {x=-1, y=2, z=-1},
+	maxvel = {x=1, y=4, z=1},
+	minacc = {x=-1, y=-1, z=-1},
+	maxacc = {x=1, y=1, z=1},
+	minexptime = 1,
+	maxexptime = 2,
+	minsize = 3,
+	maxsize = 4,
+	collisiondetection = true,
+	texture = "tnt_smoke.png",
+	animation = {
+		type = "vertical_frames",
+		aspect_w = 16,
+		aspect_h = 16,
+		length = 0.8,
+	},
+	glow = 11,
+}
 
 
 -- support for MT game translation.
@@ -26,7 +48,7 @@ local furnace_fire_sounds = {}
 
 function default.get_blast_furnace_active_formspec(fuel_percent, item_percent)
 	return "size[8,8.5]"..
-		"background[-0.1,-0.15;8.25,9.1;fd2.png]".. -- image de fond
+		"background[-0.1,-0.15;8.25,9.1;fd.png]".. -- image de fond
 		"list[context;src;2.75,0.5;1,1;]"..
 		"list[context;fuel;2.75,2.5;1,1;]"..
 		"image[2.75,1.5;1,1;default_furnace_fire_bg.png^[lowpart:"..
@@ -47,7 +69,7 @@ end
 
 function default.get_blast_furnace_inactive_formspec()
 	return "size[8,8.5]"..
-		"background[-0.1,-0.15;8.25,9.1;fd2.png]".. -- image de fond
+		"background[-0.1,-0.15;8.25,9.1;fd.png]".. -- image de fond
 		"list[context;src;2.75,0.5;1,1;]"..
 		"list[context;fuel;2.75,2.5;1,1;]"..
 		"image[2.75,1.5;1,1;default_furnace_fire_bg.png]"..
@@ -404,9 +426,19 @@ minetest.register_node("blast_furnace:blast_furnace", {
 minetest.register_node("blast_furnace:blast_furnace_active", {
 	description = "Blast Furnaces",
 	tiles = {
-		"blast_furnace_top.png", "blast_furnace_bottom.png",
-		"blast_furnace_side.png", "blast_furnace_side.png",
-		"blast_furnace_side.png", 
+		{
+			image = "blast_furnace_top_active.png",
+			animation = {
+				type = "vertical_frames",
+				aspect_w = 16,
+				aspect_h = 16,
+				length = 1.5
+			},
+		},
+		"blast_furnace_bottom.png",
+		"blast_furnace_side.png",
+		"blast_furnace_side.png",
+		"blast_furnace_side.png",
 		{
 			image = "blast_furnace_front_active.png",
 			backface_culling = false,
@@ -425,9 +457,38 @@ minetest.register_node("blast_furnace:blast_furnace_active", {
 	legacy_facedir_simple = true,
 	is_ground_content = false,
 	sounds = default.node_sound_stone_defaults(),
-	on_timer = furnace_node_timer,
+
+	-- Ajout du minuteur pour la fumée
+	on_timer = function(pos, elapsed)
+		minetest.add_particlespawner({
+			amount = 10,
+			time = 0.1,
+			minpos = {x=pos.x-0.5, y=pos.y+0.7, z=pos.z-0.5},
+			maxpos = {x=pos.x+0.5, y=pos.y+0.7, z=pos.z+0.5},
+			minvel = {x=-0.1, y=0.1, z=-0.1},
+			maxvel = {x=0.1, y=0.3, z=0.1},
+			minacc = {x=0, y=0.2, z=0},
+			maxacc = {x=0, y=0.5, z=0},
+			minexptime = 1,
+			maxexptime = 2,
+			minsize = 5,
+			maxsize = 8,
+			collisiondetection = true,
+			texture = "tnt_smoke.png",
+		})
+		return true
+	end,
+
+	-- Démarrage du minuteur lors du démarrage du four
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_int("timer", 0)
+		minetest.get_node_timer(pos):start(1)
+	end,
+
+	-- Arrêt du minuteur lors de la destruction du four
 	on_destruct = function(pos)
-		stop_furnace_sound(pos)
+		minetest.get_node_timer(pos):stop()
 	end,
 
 	can_dig = can_dig,
@@ -436,6 +497,7 @@ minetest.register_node("blast_furnace:blast_furnace_active", {
 	allow_metadata_inventory_move = allow_metadata_inventory_move,
 	allow_metadata_inventory_take = allow_metadata_inventory_take,
 })
+
 
 minetest.register_craft({
 	output = "blast_furnace:blast_furnace",
